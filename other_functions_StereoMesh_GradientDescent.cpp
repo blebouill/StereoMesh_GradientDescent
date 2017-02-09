@@ -157,6 +157,36 @@ int compute_A_matrices(double * B, int N_T, double * A)
 
 
 
+// __ Calcul de compute_nb_triangles_using_vertex
+int compute_nb_triangles_using_vertex(int * ind_triangles_using_vertex, int N_V, int * nb_triangles_using_vertex)
+{
+	int i, j;
+
+	int * ptr_nb_triangles_using_vertex = nb_triangles_using_vertex;
+	int * ptr_ind_triangles_using_vertex = ind_triangles_using_vertex;
+
+	// Initialization
+	for (i = 0; i < N_V; i++)
+	{
+		*ptr_nb_triangles_using_vertex = 0;
+		ptr_nb_triangles_using_vertex++;
+	}
+
+	// Compute nb_triangles_using_vertex
+	for (i = 0; i < N_V; i++)
+	{
+		for (j = 0; j < 6; j++)
+		{
+			if (*ptr_ind_triangles_using_vertex >= 0)
+				(*ptr_nb_triangles_using_vertex)++;
+
+			ptr_ind_triangles_using_vertex++;
+		}
+		ptr_nb_triangles_using_vertex++;
+	}
+
+	return 0;
+}
 
 
 
