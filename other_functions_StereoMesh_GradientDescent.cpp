@@ -157,22 +157,82 @@ int compute_A_matrices(double * B, int N_T, double * A)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-// __ Calculs préliminaires
-int run_StereoMesh_precomputations(double * S, int N_T, double * inv_S)
+// __ Calcul de compute_nb_triangles_using_vertex
+int compute_nb_triangles_using_vertex(int * ind_triangles_using_vertex, int N_V, int * nb_triangles_using_vertex)
 {
+	int i, j;
 
-	// __ Inversion des matrices S
-	invert_S_matrices(S, N_T, inv_S);
+	int * ptr_nb_triangles_using_vertex = nb_triangles_using_vertex;
+	int * ptr_ind_triangles_using_vertex = ind_triangles_using_vertex;
+
+	// Initialization
+	for (i = 0; i < N_V; i++)
+	{
+		*ptr_nb_triangles_using_vertex = 0;
+		ptr_nb_triangles_using_vertex++;
+	}
+
+	// Compute nb_triangles_using_vertex
+	for (i = 0; i < N_V; i++)
+	{
+		for (j = 0; j < 6; j++)
+		{
+			if (*ptr_ind_triangles_using_vertex >= 0)
+				(*ptr_nb_triangles_using_vertex)++;
+
+			ptr_ind_triangles_using_vertex++;
+		}
+		ptr_nb_triangles_using_vertex++;
+	}
+
+	return 0;
+}
+
+
+
+// __ Calcul de la carte des disparités
+int compute_disparity_map(int * img_label, int N_pixels, double * D, double * inv_S_by_pH, double * disparity_map)
+{
+	int i, m;
+
+	int * ptr_img_label = img_label;
+	double * ptr_inv_S_by_pH = inv_S_by_pH;
+	double * ptr_disparity_map = disparity_map;
+
+	for (i = 0; i < N_pixels; i++)
+	{
+		m = *ptr_img_label;
+		*ptr_disparity_map = mult_1_3_vector_by_3_1_vector(D + 3 * m, ptr_inv_S_by_pH);		// disp_pix = d_m x S_m^(-1) x pH
+
+		ptr_img_label++;
+		ptr_inv_S_by_pH++;
+		ptr_disparity_map++;
+	}
+
+	return 0;
+}
+
+
+
+// __ Calcul de l'image interpolée (RGB)
+int compute_img2_interp(double * img1, int width_img, int height_img, double * disparity_map, double * img2_interp)
+{
+	// Ne prend pas en compte si des pixels sont interpolés plusieurs fois
+
+	int i, N_pixels = height_img * width_img;
+
+	double * ptr_img1_R = img1;
+	double * ptr_img1_G = img1 + N_pixels;
+	double * ptr_img1_B = img1 + 2 * N_pixels;
+
+	double * ptr_img2_interp_R = img2_interp;
+	double * ptr_img2_interp_G = img2_interp + N_pixels;
+	double * ptr_img2_interp_B = img2_interp + 2 * N_pixels;
+
+
+
+
+
+
+
 }
