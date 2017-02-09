@@ -219,20 +219,58 @@ int compute_img2_interp(double * img1, int width_img, int height_img, double * d
 {
 	// Ne prend pas en compte si des pixels sont interpolés plusieurs fois
 
-	int i, N_pixels = height_img * width_img;
+	int i, x, y, x1, N_pixels = height_img * width_img;
+	double x_img2;
+
+	double * ptr_disparity_map = disparity_map;
 
 	double * ptr_img1_R = img1;
 	double * ptr_img1_G = img1 + N_pixels;
 	double * ptr_img1_B = img1 + 2 * N_pixels;
 
+	double * ptr_img2_interp = img2_interp;
 	double * ptr_img2_interp_R = img2_interp;
 	double * ptr_img2_interp_G = img2_interp + N_pixels;
 	double * ptr_img2_interp_B = img2_interp + 2 * N_pixels;
 
+	// Initialization
+	for (i = 0; i < 3 * N_pixels; i++)
+	{
+		*ptr_img2_interp = 0.0;
+		ptr_img2_interp++;
+	}
+		
+	// Loop
+	for (y = 0; y < height_img; y++)
+	{
+		for (x = 0; x < width_img; x++)
+		{
+			// Pixel disparity
+			x_img2 = (double)x + *ptr_disparity_map;
+
+			if ((x_img2 >= 0.0) && (x_img2 <= (double)(width_img - 1)))
+			{
+				// Interpolations (neirest neighbor)
+				x1 = (int)round(x_img2);
+
+				ptr_img2_interp_R[x1] = *ptr_img1_R;
+				ptr_img2_interp_G[x1] = *ptr_img1_G;
+				ptr_img2_interp_B[x1] = *ptr_img1_B;
+			}
+
+			// Update pointers (next pixel)
+			ptr_disparity_map++;
+			ptr_img1_R++;
+			ptr_img1_G++;
+			ptr_img1_B++;
+		}
+
+		// Update pointers (next line)
+		ptr_img2_interp_R += width_img;
+		ptr_img2_interp_G += width_img;
+		ptr_img2_interp_B += width_img;
 
 
-
-
-
+	}
 
 }

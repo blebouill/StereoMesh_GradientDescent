@@ -196,6 +196,8 @@ int compute_grad_E_DATA(
 
 
 
+
+
 //===========================================================================
 ///	compute_grad_E_BREACH
 ///
@@ -300,9 +302,6 @@ int compute_grad_E_BREACH(
 
 
 
-
-
-
 //===========================================================================
 ///	compute_grad_E_NORMAL
 ///
@@ -315,7 +314,7 @@ int compute_grad_E_NORMAL(
 			double *	A,
 			double *	B,
 			double *	D,							// Disparity vector
-			double *	grad_E_NORMAL,				// Gradient of the E_NORMAL term
+			double *	grad_D_NORMAL,				// Gradient of the E_NORMAL term
 			double *	current_energy_E_NORMAL		// Current energy of the E_NORMAL term
 )
 {
@@ -328,7 +327,7 @@ int compute_grad_E_NORMAL(
 	double A12[9], grad_tmp1[3], grad_tmp2[3];
 
 	int * ptr_ind_triangles_using_edge = ind_triangles_using_edge;
-	double * ptr_grad_E_NORMAL = grad_E_NORMAL;
+	double * ptr_grad_D_NORMAL = grad_D_NORMAL;
 	double * ptr_d1 = NULL, * ptr_d2 = NULL;
 	double * ptr_A11 = NULL, *ptr_A22 = NULL;
 
@@ -339,8 +338,8 @@ int compute_grad_E_NORMAL(
 	// Initialization
 	for (i = 0; i < 3 * N_T; i++)
 	{
-		*ptr_grad_E_NORMAL = 0.0;
-		ptr_grad_E_NORMAL++;
+		*ptr_grad_D_NORMAL = 0.0;
+		ptr_grad_D_NORMAL++;
 	}
 
 	*current_energy_E_NORMAL = 0.0;
@@ -372,25 +371,25 @@ int compute_grad_E_NORMAL(
 
 
 			// Compute gradient for m1
-			ptr_grad_E_NORMAL = grad_E_NORMAL + 3 * m1;
+			ptr_grad_D_NORMAL = grad_D_NORMAL + 3 * m1;
 
 			mult_1_3_vector_by_3_3_transpose_matrix(ptr_d2, A12, grad_tmp1);		// grad_tmp1 = d2' x A12'
 			mult_1_3_vector_by_3_3_matrix(ptr_d1, ptr_A11, grad_tmp2);			// grad_tmp2 = d1' x A11
 
-			ptr_grad_E_NORMAL[0] -= NUM * (2.0 * DENOM * grad_tmp1[0] - DENOM2 * NUM * grad_tmp2[0]) / (DENOM * DENOM);
-			ptr_grad_E_NORMAL[1] -= NUM * (2.0 * DENOM * grad_tmp1[1] - DENOM2 * NUM * grad_tmp2[1]) / (DENOM * DENOM);
-			ptr_grad_E_NORMAL[2] -= NUM * (2.0 * DENOM * grad_tmp1[2] - DENOM2 * NUM * grad_tmp2[2]) / (DENOM * DENOM);
+			ptr_grad_D_NORMAL[0] -= NUM * (2.0 * DENOM * grad_tmp1[0] - DENOM2 * NUM * grad_tmp2[0]) / (DENOM * DENOM);
+			ptr_grad_D_NORMAL[1] -= NUM * (2.0 * DENOM * grad_tmp1[1] - DENOM2 * NUM * grad_tmp2[1]) / (DENOM * DENOM);
+			ptr_grad_D_NORMAL[2] -= NUM * (2.0 * DENOM * grad_tmp1[2] - DENOM2 * NUM * grad_tmp2[2]) / (DENOM * DENOM);
 
 
 			// Compute gradient for m2
-			ptr_grad_E_NORMAL = grad_E_NORMAL + 3 * m2;
+			ptr_grad_D_NORMAL = grad_D_NORMAL + 3 * m2;
 
 			mult_1_3_vector_by_3_3_matrix(ptr_d1, A12, grad_tmp1);				// grad_tmp1 = d1' x A12
 			mult_1_3_vector_by_3_3_matrix(ptr_d2, ptr_A22, grad_tmp2);			// grad_tmp2 = d2' x A22
 
-			ptr_grad_E_NORMAL[0] -= NUM * (2.0 * DENOM * grad_tmp1[0] - DENOM1 * NUM * grad_tmp2[0]) / (DENOM * DENOM);
-			ptr_grad_E_NORMAL[1] -= NUM * (2.0 * DENOM * grad_tmp1[1] - DENOM1 * NUM * grad_tmp2[1]) / (DENOM * DENOM);
-			ptr_grad_E_NORMAL[2] -= NUM * (2.0 * DENOM * grad_tmp1[2] - DENOM1 * NUM * grad_tmp2[2]) / (DENOM * DENOM);
+			ptr_grad_D_NORMAL[0] -= NUM * (2.0 * DENOM * grad_tmp1[0] - DENOM1 * NUM * grad_tmp2[0]) / (DENOM * DENOM);
+			ptr_grad_D_NORMAL[1] -= NUM * (2.0 * DENOM * grad_tmp1[1] - DENOM1 * NUM * grad_tmp2[1]) / (DENOM * DENOM);
+			ptr_grad_D_NORMAL[2] -= NUM * (2.0 * DENOM * grad_tmp1[2] - DENOM1 * NUM * grad_tmp2[2]) / (DENOM * DENOM);
 
 
 			// Compute current energy

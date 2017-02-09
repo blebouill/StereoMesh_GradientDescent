@@ -4,6 +4,7 @@
 
 #include "matrix_calculation_functions.h"
 #include "other_functions_StereoMesh_GradientDescent.h"
+#include "energy_StereoMesh_GradientDescent.h"
 
 
 
@@ -28,7 +29,7 @@ int StereoMesh_GradientDescent(
 			int *		ind_vertex_in_triangle,		// Indices of the 3 vertices in each triangle [size 3*N_T]
 			int *		ind_triangles_using_vertex,	// Indices of the triangles using each vertex [size 6*N_V] (max number of triangles using a vertex is 6, when less the last indices are -1)
 			int *		ind_triangles_using_edge,	// Indices of the triangles using each edge [size 2*N_E] (max number of triangles using an edge is 2, when less the last indice is -1)
-			double *	D_init						// Initialization of D
+			double *	D_init,						// Initialization of D
 			double *	S,							// S matrices (containing vertices homogeneous coordinates for each triangle)
 			double		delta_init,					// Initial step for the gradient descent
 			double		lambda_BREACH,				// Weight of E_BREACH
@@ -42,15 +43,19 @@ int StereoMesh_GradientDescent(
 	//	Variables
 
 	int i, N_pixels = height_img * width_img;
+	double current_energy_E_DATA, current_energy_E_BREACH, current_energy_E_NORMAL, current_energy;
+	double last_energy_E_DATA, last_energy_E_BREACH, last_energy_E_NORMAL, last_energy;
 
 	int * nb_triangles_using_vertex = NULL;
 
 	double * inv_S = NULL, * inv_S_by_pH = NULL;
 	double * A = NULL, * B = NULL;
-	double * D = NULL;	// Disparity vector
+	
+	double * D_current = NULL;	// Current disparity vector
+	double * D_next = NULL;		// Next disparity vector (if accepted)
 
-	double * ptr_D = NULL;
-	double * ptr_D_init = D_init;
+	double * grad_D_DATA_current = NULL, * grad_D_BREACH_current = NULL, * grad_D_NORMAL_current = NULL;
+	double * grad_D_DATA_next = NULL, * grad_D_BREACH_next = NULL, * grad_D_NORMAL_next = NULL;
 
 
 
@@ -63,22 +68,27 @@ int StereoMesh_GradientDescent(
 	inv_S_by_pH = (double *)calloc(3 * N_pixels, sizeof(double));
 	B = (double *)calloc(9 * N_T, sizeof(double));
 	A = (double *)calloc(9 * N_T, sizeof(double));
-	D = (double *)calloc(3 * N_T, sizeof(double));
+
+	D_current = (double *)calloc(3 * N_T, sizeof(double));
+	D_next = (double *)calloc(3 * N_T, sizeof(double));
+
+	grad_D_DATA_current = (double *)calloc(3 * N_T, sizeof(double));
+	grad_D_BREACH_current = (double *)calloc(3 * N_T, sizeof(double));
+	grad_D_NORMAL_current = (double *)calloc(3 * N_T, sizeof(double));
+
+	grad_D_DATA_next = (double *)calloc(3 * N_T, sizeof(double));
+	grad_D_BREACH_next = (double *)calloc(3 * N_T, sizeof(double));
+	grad_D_NORMAL_next = (double *)calloc(3 * N_T, sizeof(double));
+
+
 
 
 
 	// =========================================
 	//	Initialization
 
-	ptr_D = D;
+	copy_vector(D_init, 3 * N_T, D_current);
 
-	for (i = 0; i < 3 * N_T; i++)
-	{
-		*ptr_D = *ptr_D_init;
-		
-		ptr_D_init++;
-		ptr_D++;
-	}
 
 
 
@@ -106,9 +116,23 @@ int StereoMesh_GradientDescent(
 
 
 	// =========================================
-	//	Gradient computation
+	//	First iteration
 
-	// Gradient of the data term
+	// Gradient & energy of the E_DATA term
+	compute_grad_E_DATA(img1, img2, grad_img2_x, width_img, height_img, N_pixels, img_label, N_T, inv_S_by_pH, D_current, grad_D_DATA_current, &current_energy_E_DATA);
+
+	// Gradient & energy of the E_BREACH term
+	compute_grad_E_BREACH(ind_vertex_in_triangle, ind_triangles_using_vertex, nb_triangles_using_vertex, N_V, N_T, D_current, grad_D_BREACH_current, &current_energy_E_BREACH);
+
+	// Gradient & energy of the E_NORMAL term
+	compute_grad_E_NORMAL(ind_triangles_using_edge, N_E, N_T, A, B, D_current, grad_D_NORMAL_current, &current_energy_E_NORMAL);
+
+
+
+
+
+
+
 
 
 
@@ -121,7 +145,19 @@ int StereoMesh_GradientDescent(
 	free(inv_S_by_pH);
 	free(B);
 	free(A);
-	free(D);
+
+	free(D_current);
+	free(D_next);
+
+	free(grad_D_DATA_current);
+	free(grad_D_BREACH_current);
+	free(grad_D_NORMAL_current);
+
+	free(grad_D_DATA_next);
+	free(grad_D_BREACH_next);
+	free(grad_D_NORMAL_next);
+
+
 
 	return 0;
 }

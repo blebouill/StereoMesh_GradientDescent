@@ -1,5 +1,10 @@
 #pragma once
 
+// Copie de vecteurs
+int add_two_vectors(double * A, double * B, int size_vector, double * C);
+int subtract_two_vectors(double * A, double * B, int size_vector, double * C);
+int copy_vector(double * A, int size_vector, double * B);
+
 
 // Multiplication de vecteurs
 double mult_1_3_vector_by_3_1_vector(double * a, double * b);

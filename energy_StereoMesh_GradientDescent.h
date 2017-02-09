@@ -57,7 +57,7 @@ int compute_grad_E_NORMAL(
 	double *	A,
 	double *	B,
 	double *	D,							// Disparity vector
-	double *	grad_E_NORMAL,				// Gradient of the E_NORMAL term
+	double *	grad_D_NORMAL,				// Gradient of the E_NORMAL term
 	double *	current_energy_E_NORMAL		// Current energy of the E_NORMAL term
 );
 

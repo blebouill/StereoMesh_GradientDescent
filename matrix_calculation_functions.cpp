@@ -5,6 +5,74 @@
 #include "matrix_calculation_functions.h"
 
 
+// __ Ajouter deux vecteurs
+
+int add_two_vectors(double * A, double * B, int size_vector, double * C)
+{
+	// C = A + B
+
+	double * ptr_A = A;
+	double * ptr_B = B;
+	double * ptr_C = C;
+
+	for (int i = 0; i < size_vector; i++)
+	{
+		*ptr_C = *ptr_A + *ptr_B;
+
+		ptr_A++;
+		ptr_B++;
+		ptr_C++;
+	}
+
+	return 0;
+}
+
+
+// __ Soustraire deux vecteurs
+
+int subtract_two_vectors(double * A, double * B, int size_vector, double * C)
+{
+	// C = A - B
+
+	double * ptr_A = A;
+	double * ptr_B = B;
+	double * ptr_C = C;
+
+	for (int i = 0; i < size_vector; i++)
+	{
+		*ptr_C = *ptr_A - *ptr_B;
+
+		ptr_A++;
+		ptr_B++;
+		ptr_C++;
+	}
+
+	return 0;
+}
+
+
+// __ Copier un vecteur
+
+int copy_vector(double * A, int size_vector, double * B)
+{
+	// B <- A
+
+	double * ptr_A = A;
+	double * ptr_B = B;
+
+	for (int i = 0; i < size_vector; i++)
+	{
+		*ptr_B = *ptr_A;
+
+		ptr_A++;
+		ptr_B++;
+	}
+
+	return 0;
+}
+
+
+
 
 
 // __ Multiplication d'un vecteur 1x3 par un vecteur 3x1

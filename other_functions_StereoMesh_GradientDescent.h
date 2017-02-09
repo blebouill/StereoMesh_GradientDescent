@@ -24,3 +24,7 @@ int compute_nb_triangles_using_vertex(int * ind_triangles_using_vertex, int N_V,
 
 // Calcul de la carte des disparités
 int compute_disparity_map(int * img_label, int N_pixels, double * D, double * inv_S_by_pH, double * disparity_map);
+
+
+// Calcul de l'image interpolée (RGB)
+int compute_img2_interp(double * img1, int width_img, int height_img, double * disparity_map, double * img2_interp)
