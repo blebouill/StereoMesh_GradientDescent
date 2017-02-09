@@ -274,3 +274,52 @@ int compute_img2_interp(double * img1, int width_img, int height_img, double * d
 	}
 
 }
+
+
+
+// __ Calcul du nouveau gradient
+int compute_next_grad_D(double * grad_D_DATA, double * grad_D_BREACH, double * grad_D_NORMAL, int N_T, double lambda_BREACH, double lambda_NORMAL, double * grad_D_next)
+{
+	int i;
+
+	double * ptr_grad_D_DATA = grad_D_DATA;
+	double * ptr_grad_D_BREACH = grad_D_BREACH;
+	double * ptr_grad_D_NORMAL = grad_D_NORMAL;
+	double * ptr_grad_D_next = grad_D_next;
+
+	for (i = 0; i < 3 * N_T; i++)
+	{
+		*ptr_grad_D_next = (*ptr_grad_D_DATA) + lambda_BREACH * (*ptr_grad_D_BREACH) + lambda_NORMAL * (*ptr_grad_D_NORMAL);
+
+		ptr_grad_D_DATA++;
+		ptr_grad_D_BREACH++;
+		ptr_grad_D_NORMAL++;
+		ptr_grad_D_next++;
+
+	}
+
+	return 0;
+}
+
+
+
+// __ Mise à jour de D
+int update_D(double * D, double * grad_D, int N_T, double delta_GradientDescent, double * D_new)
+{
+	int i;
+
+	double * ptr_D = D;
+	double * ptr_grad_D = grad_D;
+	double * ptr_D_new = D_new;
+
+	for (i = 0; i < 3 * N_T; i++)
+	{
+		*ptr_D_new = (*ptr_D) - delta_GradientDescent * (*ptr_grad_D);
+
+		ptr_D_new++;
+		ptr_D++;
+		ptr_grad_D++;
+	}
+
+	return 0;
+}

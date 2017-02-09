@@ -27,4 +27,12 @@ int compute_disparity_map(int * img_label, int N_pixels, double * D, double * in
 
 
 // Calcul de l'image interpolée (RGB)
-int compute_img2_interp(double * img1, int width_img, int height_img, double * disparity_map, double * img2_interp)
+int compute_img2_interp(double * img1, int width_img, int height_img, double * disparity_map, double * img2_interp);
+
+
+// Calcul du nouveau gradient
+int compute_next_grad_D(double * grad_D_DATA, double * grad_D_BREACH, double * grad_D_NORMAL, int N_T, double lambda_BREACH, double lambda_NORMAL, double * grad_D_next);
+
+
+// Mise à jour de D
+int update_D(double * D, double * grad_D, int N_T, double delta_GradientDescent, double * D_new);

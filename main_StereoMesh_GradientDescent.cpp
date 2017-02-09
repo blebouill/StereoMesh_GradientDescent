@@ -42,7 +42,8 @@ int StereoMesh_GradientDescent(
 	// =========================================
 	//	Variables
 
-	int i, N_pixels = height_img * width_img;
+	int i, ind_ITER, N_pixels = height_img * width_img;
+	double delta_GradientDescent, delta_GradientDescent_min;
 	double current_energy_E_DATA, current_energy_E_BREACH, current_energy_E_NORMAL, current_energy;
 	double last_energy_E_DATA, last_energy_E_BREACH, last_energy_E_NORMAL, last_energy;
 
@@ -54,6 +55,7 @@ int StereoMesh_GradientDescent(
 	double * D_current = NULL;	// Current disparity vector
 	double * D_next = NULL;		// Next disparity vector (if accepted)
 
+	double * grad_D_current = NULL;
 	double * grad_D_DATA_current = NULL, * grad_D_BREACH_current = NULL, * grad_D_NORMAL_current = NULL;
 	double * grad_D_DATA_next = NULL, * grad_D_BREACH_next = NULL, * grad_D_NORMAL_next = NULL;
 
@@ -71,6 +73,8 @@ int StereoMesh_GradientDescent(
 
 	D_current = (double *)calloc(3 * N_T, sizeof(double));
 	D_next = (double *)calloc(3 * N_T, sizeof(double));
+
+	grad_D_current = (double *)calloc(3 * N_T, sizeof(double));
 
 	grad_D_DATA_current = (double *)calloc(3 * N_T, sizeof(double));
 	grad_D_BREACH_current = (double *)calloc(3 * N_T, sizeof(double));
@@ -116,7 +120,7 @@ int StereoMesh_GradientDescent(
 
 
 	// =========================================
-	//	First iteration
+	//	Iteration 0
 
 	// Gradient & energy of the E_DATA term
 	compute_grad_E_DATA(img1, img2, grad_img2_x, width_img, height_img, N_pixels, img_label, N_T, inv_S_by_pH, D_current, grad_D_DATA_current, &current_energy_E_DATA);
@@ -128,10 +132,79 @@ int StereoMesh_GradientDescent(
 	compute_grad_E_NORMAL(ind_triangles_using_edge, N_E, N_T, A, B, D_current, grad_D_NORMAL_current, &current_energy_E_NORMAL);
 
 
+	// Gradient
+	compute_next_grad_D(grad_D_DATA_current, grad_D_BREACH_current, grad_D_NORMAL_current, N_T, lambda_BREACH, lambda_NORMAL, grad_D_current);
+
+
+	// Compute energy
+	last_energy = current_energy_E_DATA + lambda_BREACH * current_energy_E_BREACH + lambda_NORMAL * current_energy_E_NORMAL;
 
 
 
 
+
+	// =========================================
+	//	Main loop
+
+	ind_ITER = 1;
+
+	delta_GradientDescent = delta_init;
+	delta_GradientDescent_min = delta_init / 100.0;
+
+
+	while( (ind_ITER < N_ITERmax) && (delta_GradientDescent < delta_GradientDescent_min) )
+	{
+		// Update D
+		update_D(D_current, grad_D_current, N_T, delta_GradientDescent, D_next);
+
+
+		// Gradient & energy of the E_DATA term
+		compute_grad_E_DATA(img1, img2, grad_img2_x, width_img, height_img, N_pixels, img_label, N_T, inv_S_by_pH, D_next, grad_D_DATA_next, &current_energy_E_DATA);
+
+		// Gradient & energy of the E_BREACH term
+		compute_grad_E_BREACH(ind_vertex_in_triangle, ind_triangles_using_vertex, nb_triangles_using_vertex, N_V, N_T, D_next, grad_D_BREACH_next, &current_energy_E_BREACH);
+
+		// Gradient & energy of the E_NORMAL term
+		compute_grad_E_NORMAL(ind_triangles_using_edge, N_E, N_T, A, B, D_next, grad_D_NORMAL_next, &current_energy_E_NORMAL);
+
+
+		// Compute energy if D_next is validated
+		current_energy = current_energy_E_DATA + lambda_BREACH * current_energy_E_BREACH + lambda_NORMAL * current_energy_E_NORMAL;
+
+
+		// Validate if current_energy is less than last_energy
+		if (current_energy < last_energy)
+		{
+			// Update energy
+			last_energy = current_energy;
+
+			// Update D_current
+			copy_vector(D_next, 3 * N_T, D_current);
+
+			// Update grad_D_current
+			compute_next_grad_D(grad_D_DATA_next, grad_D_BREACH_next, grad_D_NORMAL_next, N_T, lambda_BREACH, lambda_NORMAL, grad_D_current);
+
+		}
+		// Else, divide delta_GradientDescent
+		else
+		{
+			delta_GradientDescent /= 2.0;
+		}
+		
+	}
+
+
+
+
+
+	// =========================================
+	//	Outputs
+
+	// Final Disparity Map
+	compute_disparity_map(img_label, N_pixels, D_current, inv_S_by_pH, final_disparity_map);
+
+	// Final interpolation of image 2 from image 1
+	compute_img2_interp(img1, width_img, height_img, final_disparity_map, final_img2_interp);
 
 
 
@@ -148,6 +221,8 @@ int StereoMesh_GradientDescent(
 
 	free(D_current);
 	free(D_next);
+
+	free(grad_D_current);
 
 	free(grad_D_DATA_current);
 	free(grad_D_BREACH_current);
