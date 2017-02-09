@@ -1,5 +1,10 @@
 #pragma once
 
+// Copie de vecteurs
+int add_two_vectors(double * A, double * B, int size_vector, double * C);
+int subtract_two_vectors(double * A, double * B, int size_vector, double * C);
+int copy_vector(double * A, int size_vector, double * B);
+
 
 // Multiplication de vecteurs
 double mult_1_3_vector_by_3_1_vector(double * a, double * b);
@@ -10,10 +15,12 @@ int mult_3_1_vector_by_1_3_vector(double * a, double * b, double * C);
 int mult_3_3_matrix_by_3_1_vector(double * A, double * b, double * c);
 int mult_1_3_vector_by_3_3_matrix(double * a, double * B, double * c);
 int mult_1_3_vector_by_3_3_transpose_matrix(double * a, double * B, double * c);
+double mult_1_3_vector_by_3_3_matrix_by_3_1_vector(double * a, double * B, double * c);
 
 
 // Multiplication de matrices
 int mult_two_3_3_matrices(double * A, double * B, double * C);
+int mult_3_3_matrix_by_3_3_transpose_matrix(double * A, double * B, double * C);
 int mult_3_3_matrix_by_its_transpose(double * A, double * B);
 
 
