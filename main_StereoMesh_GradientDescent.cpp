@@ -25,6 +25,7 @@ int StereoMesh_GradientDescent(
 			int			N_V,					// Number of vertices
 			int			N_E,					// Number of edges
 			int			N_T,					// Number of triangles
+			double *	D_init					// Initialization of D
 			double *	S,						// S matrices (containing vertices homogeneous coordinates for each triangle)
 			int			N_ITERmax,				// Max number of iteration for the gradient descent
 			double *	final_disparity_map,	// Final disparity_map
@@ -34,13 +35,14 @@ int StereoMesh_GradientDescent(
 	// =========================================
 	//	Variables
 
-	int N_pixels = height_img * width_img;
+	int i, N_pixels = height_img * width_img;
 
 	double * inv_S = NULL, * inv_S_by_pH = NULL;
 	double * A = NULL, * B = NULL;
 	double * D = NULL;	// Disparity vector
 
-
+	double * ptr_D = NULL;
+	double * ptr_D_init = D_init;
 
 
 
@@ -54,6 +56,20 @@ int StereoMesh_GradientDescent(
 	A = (double *)calloc(9 * N_T, sizeof(double));
 	D = (double *)calloc(3 * N_T, sizeof(double));
 
+
+
+	// =========================================
+	//	Initialization
+
+	ptr_D = D;
+
+	for (i = 0; i < 3 * N_T; i++)
+	{
+		*ptr_D = *ptr_D_init;
+		
+		ptr_D_init++;
+		ptr_D++;
+	}
 
 
 
