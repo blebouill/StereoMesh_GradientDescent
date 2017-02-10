@@ -273,6 +273,7 @@ int compute_img2_interp(double * img1, int width_img, int height_img, double * d
 
 	}
 
+	return 0;
 }
 
 

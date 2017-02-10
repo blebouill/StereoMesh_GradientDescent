@@ -21,7 +21,7 @@ int StereoMesh_GradientDescent(
 			int			width_img,					// Image width
 			int			height_img,					// Image height
 			double *	K,							// Camera calibration matrix of image 1
-			double *	B,							// Baseline
+			double		Baseline,					// Baseline
 			int *		img_label,					// Triangulation labels (segmentation result) [0 to N_T-1]
 			int			N_V,						// Number of vertices
 			int			N_E,						// Number of edges
@@ -42,10 +42,10 @@ int StereoMesh_GradientDescent(
 	// =========================================
 	//	Variables
 
-	int i, ind_ITER, N_pixels = height_img * width_img;
+	int ind_ITER, N_pixels = height_img * width_img;
 	double delta_GradientDescent, delta_GradientDescent_min;
-	double current_energy_E_DATA, current_energy_E_BREACH, current_energy_E_NORMAL, current_energy;
-	double last_energy_E_DATA, last_energy_E_BREACH, last_energy_E_NORMAL, last_energy;
+	double current_energy_E_DATA, current_energy_E_BREACH, current_energy_E_NORMAL;
+	double current_energy, last_energy;
 
 	int * nb_triangles_using_vertex = NULL;
 

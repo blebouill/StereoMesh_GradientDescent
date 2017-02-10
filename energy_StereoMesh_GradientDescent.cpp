@@ -29,7 +29,7 @@ int compute_grad_E_DATA(
 	// =========================================
 	//	Variables
 
-	int i, x, y, m, x1, x2, ind_pix_x1;
+	int i, x, y, m, x1, x2;
 	double x_img2, alpha;
 	double delta21_grad_R, delta21_grad_G, delta21_grad_B, sum_delta;
 	double delta_img21_R, delta_img21_G, delta_img21_B;
@@ -217,7 +217,7 @@ int compute_grad_E_BREACH(
 	// =========================================
 	//	Variables
 
-	int i, ind_vertex;
+	int i;
 
 	double * Sigma_vertex = NULL;	// Sum on all disparities using a vertex
 	double * Sigma_square_vertex = NULL;	// Sum on all squared disparities using a vertex
