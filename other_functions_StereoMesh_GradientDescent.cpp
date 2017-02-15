@@ -92,16 +92,16 @@ int invert_S_matrices(double * S, int N_T, double * inv_S)
 
 int compute_inv_S_by_pH(int * img_label, int width_img, int height_img, double * inv_S, int N_T, double * inv_S_by_pH)
 {
-	int x, y, m, ind_pix = 0;
+	int x, y, m;
 	double pH[3] = { 0.0, 0.0, 1.0 };
 
+	int * ptr_img_label = img_label;
 	double * ptr_out = inv_S_by_pH;
-
 
 	for (y = 0; y < height_img; y++)
 		for (x = 0; x < width_img; x++)
 		{
-			m = img_label[ind_pix];
+			m = *ptr_img_label;
 
 			pH[0] = (double)x;
 			pH[1] = (double)y;
@@ -109,7 +109,7 @@ int compute_inv_S_by_pH(int * img_label, int width_img, int height_img, double *
 			mult_3_3_matrix_by_3_1_vector(inv_S + 9*m, pH, ptr_out);
 
 			ptr_out += 3;
-			ind_pix++;
+			ptr_img_label++;
 		}
 
 	return 0;
@@ -168,23 +168,25 @@ int compute_nb_triangles_using_vertex(int * ind_triangles_using_vertex, int N_V,
 	// Initialization
 	for (i = 0; i < N_V; i++)
 	{
-		*ptr_nb_triangles_using_vertex = 0;
+		(*ptr_nb_triangles_using_vertex) = 0;
 		ptr_nb_triangles_using_vertex++;
 	}
-
+	
 	// Compute nb_triangles_using_vertex
+	ptr_nb_triangles_using_vertex = nb_triangles_using_vertex;
+
 	for (i = 0; i < N_V; i++)
 	{
 		for (j = 0; j < 6; j++)
 		{
-			if (*ptr_ind_triangles_using_vertex >= 0)
+			if ((*ptr_ind_triangles_using_vertex) >= 0)
 				(*ptr_nb_triangles_using_vertex)++;
-
+				
 			ptr_ind_triangles_using_vertex++;
 		}
 		ptr_nb_triangles_using_vertex++;
 	}
-
+	
 	return 0;
 }
 
@@ -205,7 +207,7 @@ int compute_disparity_map(int * img_label, int N_pixels, double * D, double * in
 		*ptr_disparity_map = mult_1_3_vector_by_3_1_vector(D + 3 * m, ptr_inv_S_by_pH);		// disp_pix = d_m x S_m^(-1) x pH
 
 		ptr_img_label++;
-		ptr_inv_S_by_pH++;
+		ptr_inv_S_by_pH += 3;
 		ptr_disparity_map++;
 	}
 
@@ -228,17 +230,9 @@ int compute_img2_interp(double * img1, int width_img, int height_img, double * d
 	double * ptr_img1_G = img1 + N_pixels;
 	double * ptr_img1_B = img1 + 2 * N_pixels;
 
-	double * ptr_img2_interp = img2_interp;
 	double * ptr_img2_interp_R = img2_interp;
 	double * ptr_img2_interp_G = img2_interp + N_pixels;
 	double * ptr_img2_interp_B = img2_interp + 2 * N_pixels;
-
-	// Initialization
-	for (i = 0; i < 3 * N_pixels; i++)
-	{
-		*ptr_img2_interp = 0.0;
-		ptr_img2_interp++;
-	}
 		
 	// Loop
 	for (y = 0; y < height_img; y++)
@@ -246,16 +240,16 @@ int compute_img2_interp(double * img1, int width_img, int height_img, double * d
 		for (x = 0; x < width_img; x++)
 		{
 			// Pixel disparity
-			x_img2 = (double)x + *ptr_disparity_map;
+			x_img2 = (double)x + (*ptr_disparity_map);
 
 			if ((x_img2 >= 0.0) && (x_img2 <= (double)(width_img - 1)))
 			{
 				// Interpolations (neirest neighbor)
 				x1 = (int)round(x_img2);
 
-				ptr_img2_interp_R[x1] = *ptr_img1_R;
-				ptr_img2_interp_G[x1] = *ptr_img1_G;
-				ptr_img2_interp_B[x1] = *ptr_img1_B;
+				ptr_img2_interp_R[x1] = (*ptr_img1_R);
+				ptr_img2_interp_G[x1] = (*ptr_img1_G);
+				ptr_img2_interp_B[x1] = (*ptr_img1_B);
 			}
 
 			// Update pointers (next pixel)
@@ -270,9 +264,9 @@ int compute_img2_interp(double * img1, int width_img, int height_img, double * d
 		ptr_img2_interp_G += width_img;
 		ptr_img2_interp_B += width_img;
 
-
 	}
 
+	return 0;
 }
 
 

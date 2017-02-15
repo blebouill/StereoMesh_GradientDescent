@@ -21,7 +21,7 @@ int StereoMesh_GradientDescent(
 			int			width_img,					// Image width
 			int			height_img,					// Image height
 			double *	K,							// Camera calibration matrix of image 1
-			double *	B,							// Baseline
+			double		Baseline,					// Baseline
 			int *		img_label,					// Triangulation labels (segmentation result) [0 to N_T-1]
 			int			N_V,						// Number of vertices
 			int			N_E,						// Number of edges
@@ -36,16 +36,18 @@ int StereoMesh_GradientDescent(
 			double		lambda_NORMAL,				// Weight of E_NORMAL
 			int			N_ITERmax,					// Max number of iteration for the gradient descent
 			double *	final_disparity_map,		// Final disparity_map
-			double *	final_img2_interp			// Final interpolation of image 2 from image 1
+			double *	final_img2_interp,			// Final interpolation of image 2 from image 1
+			double *	v_energy,					// Energy at each iteration
+			double *	D_out
 )
 {
 	// =========================================
 	//	Variables
 
-	int i, ind_ITER, N_pixels = height_img * width_img;
+	int ind_ITER, N_pixels = height_img * width_img;
 	double delta_GradientDescent, delta_GradientDescent_min;
-	double current_energy_E_DATA, current_energy_E_BREACH, current_energy_E_NORMAL, current_energy;
-	double last_energy_E_DATA, last_energy_E_BREACH, last_energy_E_NORMAL, last_energy;
+	double current_energy_E_DATA, current_energy_E_BREACH, current_energy_E_NORMAL;
+	double current_energy, last_energy;
 
 	int * nb_triangles_using_vertex = NULL;
 
@@ -59,7 +61,7 @@ int StereoMesh_GradientDescent(
 	double * grad_D_DATA_current = NULL, * grad_D_BREACH_current = NULL, * grad_D_NORMAL_current = NULL;
 	double * grad_D_DATA_next = NULL, * grad_D_BREACH_next = NULL, * grad_D_NORMAL_next = NULL;
 
-
+	mexPrintf("Section Variables ok .......................\n");
 
 
 	// =========================================
@@ -84,7 +86,7 @@ int StereoMesh_GradientDescent(
 	grad_D_BREACH_next = (double *)calloc(3 * N_T, sizeof(double));
 	grad_D_NORMAL_next = (double *)calloc(3 * N_T, sizeof(double));
 
-
+	mexPrintf("Section Memory Allocation ok .......................\n");
 
 
 
@@ -93,8 +95,8 @@ int StereoMesh_GradientDescent(
 
 	copy_vector(D_init, 3 * N_T, D_current);
 
-
-
+	mexPrintf("Section Initialization ok .......................\n");
+	
 
 
 	// =========================================
@@ -102,22 +104,22 @@ int StereoMesh_GradientDescent(
 
 	// __ Inversion des matrices S
 	invert_S_matrices(S, N_T, inv_S);
-
+	
 	// __ Calcul des S^(-1) x pH
 	compute_inv_S_by_pH(img_label, width_img, height_img, inv_S, N_T, inv_S_by_pH);
-
+	
 	// __ Calcul des matrices B = S^(-1) x K
 	compute_B_matrices(inv_S, N_T, K, B);
 
 	// __ Calcul des matrices A = B x B'
 	compute_A_matrices(B, N_T, A);
-
+	
 	// __ Calcul de nb_triangles_using_vertex
 	compute_nb_triangles_using_vertex(ind_triangles_using_vertex, N_V, nb_triangles_using_vertex);
+	
+	mexPrintf("Section Precomputations ok .......................\n");
 
-
-
-
+	
 
 	// =========================================
 	//	Iteration 0
@@ -139,8 +141,13 @@ int StereoMesh_GradientDescent(
 	// Compute energy
 	last_energy = current_energy_E_DATA + lambda_BREACH * current_energy_E_BREACH + lambda_NORMAL * current_energy_E_NORMAL;
 
-
-
+	mexPrintf("\n\n=======================================================\n");
+	mexPrintf(" _____ Iteration 0 - ");
+	mexPrintf("Current energy : %f \n", last_energy);
+	mexPrintf("\tCurrent current_energy_E_DATA : %f \n", current_energy_E_DATA);
+	mexPrintf("\tCurrent current_energy_E_BREACH : %f \n", current_energy_E_BREACH);
+	mexPrintf("\tCurrent current_energy_E_NORMAL : %f \n", current_energy_E_NORMAL);
+	mexPrintf("\n");
 
 
 	// =========================================
@@ -149,10 +156,10 @@ int StereoMesh_GradientDescent(
 	ind_ITER = 1;
 
 	delta_GradientDescent = delta_init;
-	delta_GradientDescent_min = delta_init / 100.0;
+	delta_GradientDescent_min = delta_init / 1000.0;
 
 
-	while( (ind_ITER < N_ITERmax) && (delta_GradientDescent < delta_GradientDescent_min) )
+	while( (ind_ITER <= N_ITERmax) && (delta_GradientDescent_min < delta_GradientDescent) )
 	{
 		// Update D
 		update_D(D_current, grad_D_current, N_T, delta_GradientDescent, D_next);
@@ -171,10 +178,21 @@ int StereoMesh_GradientDescent(
 		// Compute energy if D_next is validated
 		current_energy = current_energy_E_DATA + lambda_BREACH * current_energy_E_BREACH + lambda_NORMAL * current_energy_E_NORMAL;
 
+		mexPrintf("\n\n=======================================================\n");
+		mexPrintf(" _____ Iteration %d - ", ind_ITER);
+		mexPrintf("Last energy : %f --- Current energy : %f\n", last_energy, current_energy);
+		mexPrintf("\tCurrent current_energy_E_DATA : %f \n", current_energy_E_DATA);
+		mexPrintf("\tCurrent current_energy_E_BREACH : %f \n", current_energy_E_BREACH);
+		mexPrintf("\tCurrent current_energy_E_NORMAL : %f \n", current_energy_E_NORMAL);
+		mexPrintf("\tdelta_GradientDescent : %f \n", delta_GradientDescent);
+		
 
 		// Validate if current_energy is less than last_energy
 		if (current_energy < last_energy)
 		{
+			// Save energy
+			v_energy[ind_ITER-1] = last_energy;
+
 			// Update energy
 			last_energy = current_energy;
 
@@ -184,30 +202,39 @@ int StereoMesh_GradientDescent(
 			// Update grad_D_current
 			compute_next_grad_D(grad_D_DATA_next, grad_D_BREACH_next, grad_D_NORMAL_next, N_T, lambda_BREACH, lambda_NORMAL, grad_D_current);
 
+			// Next iteration
+			ind_ITER++;
 		}
 		// Else, divide delta_GradientDescent
 		else
 		{
 			delta_GradientDescent /= 2.0;
+
+			mexPrintf("\t delta_GradientDescent /= 2.0; -->> delta_GradientDescent : %f \n", delta_GradientDescent);
 		}
 		
+		mexPrintf("\n");
+
 	}
 
-
-
+	// Save energy
+	v_energy[ind_ITER-1] = last_energy;
+	
 
 
 	// =========================================
 	//	Outputs
-
+	
 	// Final Disparity Map
 	compute_disparity_map(img_label, N_pixels, D_current, inv_S_by_pH, final_disparity_map);
 
 	// Final interpolation of image 2 from image 1
 	compute_img2_interp(img1, width_img, height_img, final_disparity_map, final_img2_interp);
 
+	// D_out
+	copy_vector(D_current, 3 * N_T, D_out);
 
-
+	mexPrintf("Section Outputs ok .......................\n");
 
 
 	// =========================================
@@ -232,7 +259,7 @@ int StereoMesh_GradientDescent(
 	free(grad_D_BREACH_next);
 	free(grad_D_NORMAL_next);
 
-
+	mexPrintf("Section Memory Deallocation ok .......................\n");
 
 	return 0;
 }
